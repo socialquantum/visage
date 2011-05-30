@@ -3,9 +3,10 @@
 
 %div#profile
   %h2#profile_name= profile_name
-  - @profile.graphs.each do |graph|
+  - graph=@profile.graphs.first
+  - if graph
     - id       = URI.escape(graph.id)
-    - host     = URI.escape(graph.host)
+    - host     = URI.escape(@profile.graphs.map(&:host).sort.join(","))
     - plugin   = URI.escape(graph.plugin)
     - instance = URI.escape(graph.instances.join(','))
     %div{:id => id, :class => 'graph'}
@@ -32,7 +33,7 @@
   %div#bottom_nav
     %a{:href => link_to("/profiles")} &larr; Back to profiles
     |
-    %a{:href => link_to("?split=false")} Merge graphs
+    %a{:href => link_to("?split=true")} Split graphs
 
 
 

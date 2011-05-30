@@ -28,21 +28,22 @@ module Visage
 
         def metrics(opts={})
           case
-          when opts[:metrics].blank?
-            glob = "*/*"
-          when opts[:metrics] =~ /,/
-            glob = "{" + opts[:metrics].split(/\s*,\s*/).map { |m|
-              m =~ /\// ? m : ["*/#{m}", "#{m}/*"]
-            }.join(',').gsub(/,$/, '') + "}"
-          when opts[:metrics] !~ /\//
-            glob = "#{opts[:metrics]}/#{opts[:metrics]}"
-          else
-            glob = opts[:metrics]
+            when opts[:metrics].blank?
+              glob = "*/*"
+            when opts[:metrics] =~ /,/
+              glob = "{" + opts[:metrics].split(/\s*,\s*/).map { |m|
+                m =~ /\// ? m : ["*/#{m}", "#{m}/*"]
+              }.join(',').gsub(/,$/, '') + "}"
+            when opts[:metrics] !~ /\//
+              glob = "#{opts[:metrics]}/#{opts[:metrics]}"
+            else
+              glob = opts[:metrics]
           end
 
           host_glob = (opts[:host] || "*")
+          glob=glob.gsub(/COMMA/, "\\,")
 
-          Dir.glob("#{rrddir}/#{host_glob}/#{glob}.rrd").map {|e| e.split('/')[-2..-1].join('/').gsub(/\.rrd$/, '')}.sort.uniq
+          Dir.glob("#{rrddir}/#{host_glob}/#{glob}.rrd").map { |e| e.split('/')[-2..-1].join('/').gsub(/\.rrd$/, '') }.sort.uniq
         end
 
       end

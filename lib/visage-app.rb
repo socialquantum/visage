@@ -47,7 +47,11 @@ module Visage
       @start  = params[:start]
       @finish = params[:finish]
       @live   = params[:live] ? true : false
-      haml :profile
+      if params[:split]=="true"
+        haml :profile
+      else
+        haml :profile_merged
+      end
     end
 
     get '/profiles' do
@@ -96,6 +100,28 @@ module Visage
       content_type :jsonp
     end
 
+    def merge_l1 l,r
+      return l if r=={}
+      {[r.keys.first, l.keys.first].join(',')=>merge_add(l.values.first, r.values.first)}
+    end
+
+    def merge_add l,r
+      return r unless l
+      l.each do |k, v|
+        rv=r[k]
+        next unless rv && (rv.class == v.class)
+        if rv.kind_of?(Hash)
+          l[k]=merge_add(v, rv)
+        elsif rv.kind_of?(Array)
+          l[k]=v.map { |vv|rvv=rv.shift; vv.to_f+rvv.to_f if vv.kind_of?(Float) || rvv.kind_of?(Float) }
+        else
+          l[k]=v
+        end
+
+      end
+      l
+    end
+
     # /data/:host/:plugin/:optional_plugin_instance
     get %r{/data/([^/]+)/([^/]+)((/[^/]+)*)} do
       host = params[:captures][0].gsub("\0", "")
@@ -104,14 +130,19 @@ module Visage
       start  = params[:start]
       finish = params[:finish]
 
+      res={}
+      host.split(",").sort.each do |h|
       collectd = CollectdJSON.new(:rrddir => Visage::Config.rrddir)
-      json = collectd.json(:host             => host,
+      json = collectd.json(:host             => h,
                            :plugin           => plugin,
                            :plugin_instances => plugin_instances,
                            :start            => start,
                            :finish           => finish)
+
+        res=merge_l1  ::JSON.parse(json),res
+      end
       # if the request is cross-domain, we need to serve JSONP
-      maybe_wrap_with_callback(json)
+      maybe_wrap_with_callback(::JSON.generate(res))
     end
 
     get %r{/data/([^/]+)} do

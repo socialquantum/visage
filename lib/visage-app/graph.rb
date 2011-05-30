@@ -12,6 +12,9 @@ module Visage
       @plugin    = opts[:plugin]
       @instances = opts[:instances]
     end
+    def instances
+      @instances.map{|i|i.gsub(/\,/,"COMMA")}
+    end
 
     def id
       Digest::MD5.hexdigest("#{@host}-#{@plugin}-#{@instances}\n")

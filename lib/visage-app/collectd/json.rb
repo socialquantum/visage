@@ -23,7 +23,7 @@ class CollectdJSON
     plugin           = opts[:plugin]
     plugin_instances = opts[:plugin_instances][/\w.*/]
     instances        = plugin_instances.blank? ? '*' : '{' + plugin_instances.split('/').join(',') + '}'
-    rrdglob          = "#{@rrddir}/#{host}/#{plugin}/#{instances}.rrd"
+    rrdglob          = "#{@rrddir}/#{host}/#{plugin}/#{instances}.rrd".gsub(/COMMA/,"\\,")
 
     start = case
     when opts[:start] && opts[:start].index('.')
